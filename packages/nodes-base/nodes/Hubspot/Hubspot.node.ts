@@ -1127,7 +1127,7 @@ export class Hubspot implements INodeType {
 							inputs: [...new Array(batchSize)].map((_, index) =>
 							({
 								id: idMap[this.getNodeParameter('objectId', index + batchStart) as string],
-								properties: getProperties(index),
+								properties: getProperties(index + batchStart),
 							}),
 							).filter(element => element.id !== undefined),
 						};
@@ -1136,7 +1136,7 @@ export class Hubspot implements INodeType {
 							inputs: [...new Array(batchSize)].map((_, index) =>
 							({
 								id: idMap[this.getNodeParameter('objectId', index + batchStart) as string],
-								properties: getProperties(index),
+								properties: getProperties(index + batchStart),
 							}),
 							)
 								.filter(element => element.id === undefined)
