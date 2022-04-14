@@ -139,7 +139,7 @@
     "pg": "^8.3.0",
     "prom-client": "^13.1.0",
     "request-promise-native": "^1.0.7",
-    "sqlite3": "^5.0.2",
+    "sqlite3": "~5.0.2",
     "sse-channel": "^3.1.1",
     "tslib": "1.14.1",
     "typeorm": "0.2.30",
