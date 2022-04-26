@@ -1,4 +1,4 @@
-import { INode, JsonObject, NodeApiError, NodeOperationError } from 'n8n-workflow';
+import { ICredentialDataDecryptedObject, IExecuteFunctions, IExecuteSingleFunctions, IHookFunctions, ILoadOptionsFunctions, INode, JsonObject, NodeApiError, NodeOperationError } from 'n8n-workflow';
 
 import { OptionsWithUri } from 'request';
 
@@ -7,6 +7,7 @@ import {
 	OnOfficeAction,
 	OnOfficeActionResponse,
 	OnOfficeActionResponseSuccess,
+	OnOfficeFieldConfiguration,
 	OnOfficeReadFilterConfiguration,
 	OnOfficeResource,
 	OnOfficeResponse,
@@ -29,8 +30,8 @@ const assertSuccessfulResponse: <ElementType>(
 				responseData.status.code === 400
 					? 'Authorization failed - please check your credentials'
 					: responseData.status.code === 500
-					? 'The service failed to process your request'
-					: 'Your request is invalid or could not be processed by the service',
+						? 'The service failed to process your request'
+						: 'Your request is invalid or could not be processed by the service',
 		});
 	}
 };
@@ -77,12 +78,12 @@ export const onOfficeApiAction = async <ElementType = Record<string, unknown> | 
 
 	const hmac = md5(
 		apiSecret +
-			md5(
-				`${JSON.stringify(sortedParameters).replace(
-					'/',
-					'\\/',
-				)},${apiToken},${actionid},${identifier},${resourceid},${apiSecret},${timestamp},${resourceType}`,
-			),
+		md5(
+			`${JSON.stringify(sortedParameters).replace(
+				'/',
+				'\\/',
+			)},${apiToken},${actionid},${identifier},${resourceid},${apiSecret},${timestamp},${resourceType}`,
+		),
 	);
 
 	const action = {
@@ -160,3 +161,39 @@ export const createFilterParameter = (filterConfig?: OnOfficeReadFilterConfigura
 
 	return filter;
 };
+
+export async function getModuleDescription(
+	this: IHookFunctions | IExecuteFunctions | IExecuteSingleFunctions | ILoadOptionsFunctions,
+	module: string,
+) {
+	const request = this.helpers.request;
+	if (!request) {
+		return [];
+	}
+	const credentials = (await this.getCredentials(
+		'onOfficeApi',
+	)) as ICredentialDataDecryptedObject;
+	const apiSecret = credentials.apiSecret as string;
+	const apiToken = credentials.apiToken as string;
+
+	const resource = 'fields';
+	const operation = 'get';
+
+	const parameters = {
+		modules: [module],
+		labels: true,
+	};
+	const result = await onOfficeApiAction<OnOfficeFieldConfiguration<true>>(
+		this.getNode(),
+		request,
+		apiSecret,
+		apiToken,
+		operation,
+		resource,
+		parameters,
+	);
+
+	const availableFields = Object.entries(result[0].elements)
+		.flatMap(([key, value]) => typeof value !== 'string' ? [{ ...value, name: key }] : []);
+	return availableFields;
+}

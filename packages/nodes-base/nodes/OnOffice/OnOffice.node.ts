@@ -14,7 +14,7 @@ import {
 	fieldConfigurationFields,
 	fieldConfigurationOperations,
 } from './descriptions/FieldConfigurationDescription';
-import { createFilterParameter, onOfficeApiAction } from './GenericFunctions';
+import { createFilterParameter, getModuleDescription, onOfficeApiAction } from './GenericFunctions';
 import { searchCriteriasFields, searchCriteriasOperations } from './descriptions/SearchCriteriasDescription';
 import { searchCriteriaFieldsFields, searchCriteriaFieldsOperations } from './descriptions/SearchCriteriaFieldsDescription';
 
@@ -87,49 +87,28 @@ export class OnOffice implements INodeType {
 			...searchCriteriaFieldsOperations,
 			// ...searchCriteriaFieldsFields,
 		],
+
 	};
 
-	/* -------------------------------------------------------------------------- */
-	/*                               Custom objects                               */
-	/* -------------------------------------------------------------------------- */
+	methods = {
+		loadOptions: {
+			/* -------------------------------------------------------------------------- */
+			/*                               Address                                      */
+			/* -------------------------------------------------------------------------- */
 
-	// Get all the custom object types to display them to user so that he can select them
-	async getCustomObjectTypes(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-		const request = this.helpers.request;
-		if (!request) {
-			return [];
-		}
-		const credentials = (await this.getCredentials(
-			'onOfficeApi',
-		)) as ICredentialDataDecryptedObject;
-		const apiSecret = credentials.apiSecret as string;
-		const apiToken = credentials.apiToken as string;
+			// Get all fields of address
+			async getAddressProperties(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const availableFields = await getModuleDescription.call(this, 'address');
+				const fieldNameOptions = availableFields.map(field => ({
+					name: field.label,
+					value: field.name,
+				}));
+				return fieldNameOptions;
+			},
+		},
+	};
 
-		const resource = 'fields';
-		const operation = 'get';
 
-		const parameters = {
-			modules: ['address'],
-			labels: true,
-		};
-		const result = await onOfficeApiAction<OnOfficeFieldConfiguration<true>>(
-			this.getNode(),
-			request,
-			apiSecret,
-			apiToken,
-			operation,
-			resource,
-			parameters,
-		);
-
-		const availableFields = Object.entries(result[0].elements)
-			.flatMap(([key, value]) => typeof value !== 'string' ? [{ ...value, name: key }] : []);
-		const fieldNameOptions = availableFields.map(field => ({
-			name: field.label,
-			value: field.name,
-		}));
-		return fieldNameOptions;
-	}
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();

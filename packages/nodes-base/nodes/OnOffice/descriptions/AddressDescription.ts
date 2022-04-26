@@ -102,6 +102,7 @@ export const addressFields: INodeProperties[] = [
 	},
 	...generateReadDataFieldsDescription({
 		resource: 'address',
+		loadOptionsMethod: 'getAddressProperties',
 		specialFields: [
 			{
 				name: 'phone',
@@ -142,6 +143,11 @@ export const addressFields: INodeProperties[] = [
 				name: 'imageUrl',
 				value: 'imageUrl',
 				description: 'Image URL (pass photo) of the address',
+			},
+			{
+				name: 'Aenderung',
+				value: 'Aenderung',
+				description: 'Date of the last change',
 			},
 		],
 	}),
