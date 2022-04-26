@@ -2,6 +2,7 @@ import { INodeProperties, INodePropertyOptions } from 'n8n-workflow';
 import { OnOfficeReadAdditionalFieldName, OnOfficeResource } from '../interfaces';
 import { commonReadDescription } from './CommonReadDescription';
 
+
 export const generateReadDataFieldsDescription = ({
 	resource,
 	specialFields,
@@ -83,5 +84,87 @@ export const generateReadAdditionalFieldsDescription = ({
 				},
 			},
 			options: [...commonReadDescription, ...(additionalFields || [])],
+		},
+	] as INodeProperties[];
+
+
+
+export const generateUpdateDataFieldsDescription = ({
+	resource,
+	loadOptionsMethod,
+	additionalFields
+}: {
+	resource: OnOfficeResource;
+	loadOptionsMethod?: string;
+	additionalFields?: INodeProperties[];
+}) =>
+	[
+		{
+			displayName: 'Resource ID',
+			name: 'resourceId',
+			type: 'string',
+			required: true,
+			displayOptions: {
+				show: {
+					resource: [resource],
+					operation: ['update'],
+				},
+			},
+			default: '',
+			description: `The resource ID of the ${resource} to update.`,
+		},
+		{
+			displayName: 'Additional Fields',
+			name: 'additionalFields',
+			type: 'collection',
+			placeholder: 'Add Field',
+			default: {},
+			displayOptions: {
+				show: {
+					resource: [resource],
+					operation: ['update'],
+				},
+			},
+			options: [
+				{
+					displayName: 'Custom Properties',
+					name: 'customPropertiesUi',
+					placeholder: 'Add Property',
+					type: 'fixedCollection',
+					typeOptions: {
+						multipleValues: true,
+					},
+					default: {},
+					options: [
+						{
+							name: 'customPropertiesValues',
+							displayName: 'Custom Property',
+							values: [
+								{
+									displayName: 'Property',
+									name: 'property',
+
+									default: '',
+									description: 'Name of the property.',
+									...(loadOptionsMethod ? {
+										type: 'options',
+										typeOptions: {
+											loadOptionsMethod,
+										},
+									} : { type: 'string' }),
+								},
+								{
+									displayName: 'Value',
+									name: 'value',
+									type: 'string',
+									default: '',
+									description: 'Value of the property',
+								},
+							],
+						},
+					],
+					...(additionalFields || [])
+				},
+			],
 		},
 	] as INodeProperties[];

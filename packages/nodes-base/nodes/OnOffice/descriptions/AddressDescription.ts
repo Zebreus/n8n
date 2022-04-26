@@ -3,6 +3,7 @@ import { commonReadDescription } from './CommonReadDescription';
 import {
 	generateReadAdditionalFieldsDescription,
 	generateReadDataFieldsDescription,
+	generateUpdateDataFieldsDescription,
 } from './descriptionHelpers';
 
 export const addressOperations: INodeProperties[] = [
@@ -38,68 +39,10 @@ export const addressOperations: INodeProperties[] = [
 ];
 
 export const addressFields: INodeProperties[] = [
-	{
-		displayName: 'Resource ID',
-		name: 'resourceId',
-		type: 'string',
-		required: true,
-		displayOptions: {
-			show: {
-				resource: ['address'],
-				operation: ['update'],
-			},
-		},
-		default: '',
-		description: 'The resource ID of the address to update.',
-	},
-	{
-		displayName: 'Additional Fields',
-		name: 'additionalFields',
-		type: 'collection',
-		placeholder: 'Add Field',
-		default: {},
-		displayOptions: {
-			show: {
-				resource: ['address'],
-				operation: ['update'],
-			},
-		},
-		options: [
-			{
-				displayName: 'Properties',
-				name: 'customPropertiesUi',
-				placeholder: 'Add Property',
-				type: 'fixedCollection',
-				typeOptions: {
-					multipleValues: true,
-				},
-				default: {},
-				options: [
-					{
-						name: 'customPropertiesValues',
-						displayName: 'Custom Property',
-						values: [
-							{
-								displayName: 'Property',
-								name: 'property',
-								type: 'string',
-								default: '',
-								required: true,
-								description: 'Name of the property.',
-							},
-							{
-								displayName: 'Value',
-								name: 'value',
-								type: 'string',
-								default: '',
-								description: 'Value of the property',
-							},
-						],
-					},
-				],
-			},
-		],
-	},
+	...generateUpdateDataFieldsDescription({
+		resource: 'address',
+		loadOptionsMethod: 'getAddressProperties',
+	}),
 	...generateReadDataFieldsDescription({
 		resource: 'address',
 		loadOptionsMethod: 'getAddressProperties',
