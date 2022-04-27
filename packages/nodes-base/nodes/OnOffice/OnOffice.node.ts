@@ -140,7 +140,7 @@ export class OnOffice implements INodeType {
 		const apiToken = credentials.apiToken as string;
 
 		for (let i = 0; i < items.length; i++) {
-			if (operation === 'create') {
+			if (operation === 'create' || (operation === 'modify' && resource === 'relation')) {
 				if (resource === 'relation') {
 					const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
@@ -158,23 +158,51 @@ export class OnOffice implements INodeType {
 
 					const relationtype = `urn:onoffice-de-ns:smart:2.5:relationTypes:${this.getNodeParameter('parentType', i, null)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null) ? ':' + this.getNodeParameter('relation', i, null) : ''}`
 
+					const parentIds = this.getNodeParameter('parentids', i, null) || [this.getNodeParameter('parentid', i, null)];
+					const childIds = this.getNodeParameter('childids', i, null) || [this.getNodeParameter('childid', i, null)];
+
 					const result = await onOfficeApiAction(
 						this.getNode(),
 						request,
 						apiSecret,
 						apiToken,
-						'create',
+						operation,
 						resource,
 						{
 							relationtype,
-							parentid: this.getNodeParameter('parentid', i, null),
-							childid: this.getNodeParameter('childid', i, null),
+							parentid: parentIds,
+							childid: childIds,
 							relationinfo,
 						},
 						'relation',
 					);
 
-					returnData.push(result);
+					returnData.push(result.length ? result : [{ success: true }]);
+				}
+			}
+			if (operation === 'delete') {
+				if (resource === 'relation') {
+					const relationtype = `urn:onoffice-de-ns:smart:2.5:relationTypes:${this.getNodeParameter('parentType', i, null)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null) ? ':' + this.getNodeParameter('relation', i, null) : ''}`
+
+					const parentid = this.getNodeParameter('parentid', i, null) as string | string[] | null;
+					const childid = this.getNodeParameter('childid', i, null) as string | string[] | null;
+
+					const result = await onOfficeApiAction(
+						this.getNode(),
+						request,
+						apiSecret,
+						apiToken,
+						operation,
+						resource,
+						{
+							relationtype,
+							parentid: typeof parentid === 'string' ? parentid : parentid?.[0],
+							childid: typeof childid === 'string' ? childid : childid?.[0],
+						},
+						'relation',
+					);
+
+					returnData.push(result.length ? result : [{ success: true }]);
 				}
 			}
 			if (operation === 'read') {

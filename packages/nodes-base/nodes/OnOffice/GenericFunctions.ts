@@ -127,7 +127,7 @@ export const onOfficeApiAction = async <ElementType = Record<string, unknown> | 
 	console.log(JSON.stringify(responseData));
 
 	const results = actionResponses[0].data.records;
-	return results.length ? results : [{ success: true }];
+	return results;
 };
 
 export const createFilterParameter = (filterConfig?: OnOfficeReadFilterConfiguration) => {

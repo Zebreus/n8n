@@ -127,12 +127,22 @@ export const relationOperations: INodeProperties[] = [
             {
                 name: 'Create',
                 value: 'create',
-                description: 'Create an relation',
+                description: 'Create a relation',
             },
             {
                 name: 'Read',
                 value: 'read',
-                description: 'Read an relation',
+                description: 'Read a relation',
+            },
+            {
+                name: 'Update',
+                value: 'modify',
+                description: 'Update a relation. Many relations cannot be modified, but they can be created and deleted.',
+            },
+            {
+                name: 'Delete',
+                value: 'delete',
+                description: 'Delete a relation.',
             },
         ],
         default: 'get',
@@ -210,38 +220,99 @@ export const relationOperations: INodeProperties[] = [
 
 export const relationFields: INodeProperties[] = [
     /* -------------------------------------------------------------------------- */
-    /*                             relation:create                                */
+    /*                           relation:create, update                          */
     /* -------------------------------------------------------------------------- */
-
+    {
+        displayName: 'Query mode',
+        name: 'relationQueryMode',
+        type: 'options',
+        options: [{
+            name: "One to one",
+            value: "1:1",
+            description: "Add a relationship from one parent to one child",
+        }, {
+            name: "One to many",
+            value: "1:n",
+            description: "Add a relationship from one parent to multiple children",
+        }, {
+            name: "Many to one",
+            value: "n:1",
+            description: "Add a relationship from multiple parents to one child",
+        }],
+        default: '1:1',
+        required: true,
+        description: '',
+        displayOptions: {
+            show: {
+                resource: ['relation'],
+                operation: ['create', 'modify'],
+            },
+        },
+    },
+    {
+        displayName: 'Parent ID',
+        name: 'parentid',
+        type: 'string',
+        default: '',
+        required: true,
+        description: 'The ID of the parent element in the relation.',
+        displayOptions: {
+            show: {
+                resource: ['relation'],
+                operation: ['create', 'modify'],
+                relationQueryMode: ['1:1', '1:n'],
+            },
+        },
+    },
     {
         displayName: 'Parent IDs',
-        name: 'parentid',
+        name: 'parentids',
         type: 'string',
         typeOptions: {
             multipleValues: true,
         },
-        default: [],
-        description: 'The IDs of the parent elements in the relation. Keep in mind, that you cannot create n:n relations, only 1:n, n:1 or 1:1.',
+        default: [''],
+        required: true,
+        description: 'The IDs of the parent elements in the relation.',
         displayOptions: {
             show: {
                 resource: ['relation'],
-                operation: ['create'],
+                operation: ['create', 'modify'],
+                relationQueryMode: ['n:1'],
+            },
+        },
+    },
+
+    {
+        displayName: 'Child ID',
+        name: 'childid',
+        type: 'string',
+        default: '',
+        required: true,
+        description: 'The IDs of the child element in the relation.',
+        displayOptions: {
+            show: {
+                resource: ['relation'],
+                operation: ['create', 'modify'],
+                relationQueryMode: ['1:1', 'n:1'],
             },
         },
     },
     {
         displayName: 'Child IDs',
-        name: 'childid',
+        name: 'childids',
         type: 'string',
         typeOptions: {
             multipleValues: true,
         },
-        default: [],
-        description: 'The IDs of the child elements in the relation. Keep in mind, that you cannot create n:n relations, only 1:n, n:1 or 1:1.',
+        default: [''],
+        required: true,
+        description: 'The IDs of the child elements in the relation.',
         displayOptions: {
             show: {
                 resource: ['relation'],
-                operation: ['create'],
+                operation: ['create', 'modify'],
+                relationQueryMode: ['1:n'],
             },
         },
     },
@@ -254,7 +325,7 @@ export const relationFields: INodeProperties[] = [
         displayOptions: {
             show: {
                 resource: ['relation'],
-                operation: ['create'],
+                operation: ['create', 'modify'],
             },
         },
         options: [
@@ -294,6 +365,38 @@ export const relationFields: INodeProperties[] = [
         ],
     },
 
+    /* -------------------------------------------------------------------------- */
+    /*                           relation:create, update                          */
+    /* -------------------------------------------------------------------------- */
+
+    {
+        displayName: 'Parent ID',
+        name: 'parentid',
+        type: 'string',
+        default: '',
+        required: true,
+        description: 'The ID of the parent element in the relation.',
+        displayOptions: {
+            show: {
+                resource: ['relation'],
+                operation: ['delete'],
+            },
+        },
+    },
+    {
+        displayName: 'Child ID',
+        name: 'childid',
+        type: 'string',
+        default: '',
+        required: true,
+        description: 'The IDs of the child element in the relation.',
+        displayOptions: {
+            show: {
+                resource: ['relation'],
+                operation: ['delete'],
+            },
+        },
+    },
 
 
     /* -------------------------------------------------------------------------- */
