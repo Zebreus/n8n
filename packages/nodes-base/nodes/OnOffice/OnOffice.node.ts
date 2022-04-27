@@ -14,7 +14,7 @@ import {
 	fieldConfigurationFields,
 	fieldConfigurationOperations,
 } from './descriptions/FieldConfigurationDescription';
-import { createFilterParameter, getModuleDescription, onOfficeApiAction } from './GenericFunctions';
+import { convertMultiselectFieldsToArray, createFilterParameter, getModuleDescription, onOfficeApiAction } from './GenericFunctions';
 import {
 	searchCriteriaFields,
 	searchCriteriaOperations,
@@ -262,7 +262,7 @@ export class OnOffice implements INodeType {
 								georangesearch: additionalFields.geoRangeSearch,
 							};
 
-							const result = await onOfficeApiAction(
+							const result = await onOfficeApiAction<Record<string, unknown>>(
 								this.getNode(),
 								request,
 								apiSecret,
@@ -272,7 +272,7 @@ export class OnOffice implements INodeType {
 								parameters,
 							);
 
-							returnData.push(result);
+							returnData.push(result.map(r => convertMultiselectFieldsToArray(r)));
 						}
 						if (operation === 'update') {
 							const resourceId = this.getNodeParameter('resourceId', i) as string;
@@ -387,7 +387,7 @@ export class OnOffice implements INodeType {
 								georangesearch: additionalFields.geoRangeSearch,
 							};
 
-							const result = await onOfficeApiAction(
+							const result = await onOfficeApiAction<Record<string, unknown>>(
 								this.getNode(),
 								request,
 								apiSecret,
@@ -397,7 +397,7 @@ export class OnOffice implements INodeType {
 								parameters,
 							);
 
-							returnData.push(result);
+							returnData.push(result.map(r => convertMultiselectFieldsToArray(r)));
 						}
 						if (operation === 'update') {
 							const resourceId = this.getNodeParameter('resourceId', i) as string;
@@ -416,7 +416,7 @@ export class OnOffice implements INodeType {
 								}
 							}
 
-							const parameters = properties;
+							const parameters = { ...properties };
 
 							const result = await onOfficeApiAction(
 								this.getNode(),

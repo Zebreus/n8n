@@ -1,4 +1,14 @@
-import { ICredentialDataDecryptedObject, IExecuteFunctions, IExecuteSingleFunctions, IHookFunctions, ILoadOptionsFunctions, INode, JsonObject, NodeApiError, NodeOperationError } from 'n8n-workflow';
+import {
+	ICredentialDataDecryptedObject,
+	IExecuteFunctions,
+	IExecuteSingleFunctions,
+	IHookFunctions,
+	ILoadOptionsFunctions,
+	INode,
+	JsonObject,
+	NodeApiError,
+	NodeOperationError,
+} from 'n8n-workflow';
 
 import { OptionsWithUri } from 'request';
 
@@ -11,8 +21,10 @@ import {
 	OnOfficeReadFilterConfiguration,
 	OnOfficeResource,
 	OnOfficeResponse,
+	OnOfficeResponseRecord,
 	OnOfficeResponseSuccess,
 } from './interfaces';
+import { recordFields } from '../Google/BigQuery/RecordDescription';
 
 const md5 = (str: string) => {
 	return createHash('md5').update(str).digest('hex');
@@ -57,22 +69,26 @@ const assertSuccessfulActionResponses: <ElementType>(
 // tslint:disable-next-line: no-any
 type requestType = (uriOrObject: any) => Promise<any>;
 
-export const onOfficeApiAction = async <ElementType = Record<string, unknown> | Array<Record<string, unknown>>>(
-	node: INode,
-	request: requestType,
-	apiSecret: string,
-	apiToken: string,
-	actionType: OnOfficeAction,
-	resourceType: OnOfficeResource,
-	parameters: Record<string, unknown>,
-	resourceid = '',
+export const onOfficeApiAction = async <
+	ElementType = Record<string, unknown> | Array<Record<string, unknown>>,
+	>(
+		node: INode,
+		request: requestType,
+		apiSecret: string,
+		apiToken: string,
+		actionType: OnOfficeAction,
+		resourceType: OnOfficeResource,
+		parameters: Record<string, unknown>,
+		resourceid = '',
 ) => {
 	const identifier = '';
 	const resourcetype = resourceType;
 	const timestamp = Math.floor(Date.now() / 1000) + '';
 	const actionid = `urn:onoffice-de-ns:smart:2.5:smartml:action:${actionType}`;
 
-	const sortedParameters = Object.keys(parameters).length ? Object.fromEntries(Object.entries(parameters).sort()) : { a: null };
+	const sortedParameters = Object.keys(parameters).length
+		? Object.fromEntries(Object.entries(parameters).sort())
+		: { a: null };
 
 	console.log('Parameters: ', JSON.stringify(sortedParameters));
 
@@ -170,9 +186,7 @@ export async function getModuleDescription(
 	if (!request) {
 		return [];
 	}
-	const credentials = (await this.getCredentials(
-		'onOfficeApi',
-	)) as ICredentialDataDecryptedObject;
+	const credentials = (await this.getCredentials('onOfficeApi')) as ICredentialDataDecryptedObject;
 	const apiSecret = credentials.apiSecret as string;
 	const apiToken = credentials.apiToken as string;
 
@@ -193,7 +207,24 @@ export async function getModuleDescription(
 		parameters,
 	);
 
-	const availableFields = Object.entries(result[0].elements)
-		.flatMap(([key, value]) => typeof value !== 'string' ? [{ ...value, name: key }] : []);
+	const availableFields = Object.entries(result[0].elements).flatMap(([key, value]) =>
+		typeof value !== 'string' ? [{ ...value, name: key }] : [],
+	);
 	return availableFields;
 }
+
+export const convertMultiselectFieldsToArray = (
+	record: OnOfficeResponseRecord<Record<string, unknown>>,
+) => {
+	return {
+		...record,
+		elements: Object.fromEntries(
+			Object.entries(record.elements).map(([key, value]) => [
+				key,
+				typeof value === 'string' && value.match(/^(\|[^|]+\|)+$/gm)
+					? value.split('|').filter((v) => v)
+					: value,
+			]),
+		),
+	};
+};
