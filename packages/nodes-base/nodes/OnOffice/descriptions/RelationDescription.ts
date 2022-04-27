@@ -136,7 +136,7 @@ export const relationOperations: INodeProperties[] = [
             },
             {
                 name: 'Update',
-                value: 'modify',
+                value: 'update',
                 description: 'Update a relation. Many relations cannot be modified, but they can be created and deleted.',
             },
             {
@@ -245,7 +245,7 @@ export const relationFields: INodeProperties[] = [
         displayOptions: {
             show: {
                 resource: ['relation'],
-                operation: ['create', 'modify'],
+                operation: ['create', 'update'],
             },
         },
     },
@@ -259,7 +259,7 @@ export const relationFields: INodeProperties[] = [
         displayOptions: {
             show: {
                 resource: ['relation'],
-                operation: ['create', 'modify'],
+                operation: ['create', 'update'],
                 relationQueryMode: ['1:1', '1:n'],
             },
         },
@@ -277,7 +277,7 @@ export const relationFields: INodeProperties[] = [
         displayOptions: {
             show: {
                 resource: ['relation'],
-                operation: ['create', 'modify'],
+                operation: ['create', 'update'],
                 relationQueryMode: ['n:1'],
             },
         },
@@ -293,7 +293,7 @@ export const relationFields: INodeProperties[] = [
         displayOptions: {
             show: {
                 resource: ['relation'],
-                operation: ['create', 'modify'],
+                operation: ['create', 'update'],
                 relationQueryMode: ['1:1', 'n:1'],
             },
         },
@@ -311,7 +311,7 @@ export const relationFields: INodeProperties[] = [
         displayOptions: {
             show: {
                 resource: ['relation'],
-                operation: ['create', 'modify'],
+                operation: ['create', 'update'],
                 relationQueryMode: ['1:n'],
             },
         },
@@ -325,7 +325,7 @@ export const relationFields: INodeProperties[] = [
         displayOptions: {
             show: {
                 resource: ['relation'],
-                operation: ['create', 'modify'],
+                operation: ['create', 'update'],
             },
         },
         options: [

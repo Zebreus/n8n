@@ -15,8 +15,14 @@ import {
 	fieldConfigurationOperations,
 } from './descriptions/FieldConfigurationDescription';
 import { createFilterParameter, getModuleDescription, onOfficeApiAction } from './GenericFunctions';
-import { searchCriteriasFields, searchCriteriasOperations } from './descriptions/SearchCriteriasDescription';
-import { searchCriteriaFieldsFields, searchCriteriaFieldsOperations } from './descriptions/SearchCriteriaFieldsDescription';
+import {
+	searchCriteriasFields,
+	searchCriteriasOperations,
+} from './descriptions/SearchCriteriasDescription';
+import {
+	searchCriteriaFieldsFields,
+	searchCriteriaFieldsOperations,
+} from './descriptions/SearchCriteriaFieldsDescription';
 import { relationFields, relationOperations } from './descriptions/RelationDescription';
 
 export class OnOffice implements INodeType {
@@ -95,7 +101,6 @@ export class OnOffice implements INodeType {
 			...relationOperations,
 			...relationFields,
 		],
-
 	};
 
 	methods = {
@@ -107,7 +112,7 @@ export class OnOffice implements INodeType {
 			// Get all fields of address
 			async getAddressProperties(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				const availableFields = await getModuleDescription.call(this, 'address');
-				const fieldNameOptions = availableFields.map(field => ({
+				const fieldNameOptions = availableFields.map((field) => ({
 					name: field.label,
 					value: field.name,
 				}));
@@ -115,8 +120,6 @@ export class OnOffice implements INodeType {
 			},
 		},
 	};
-
-
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
@@ -127,11 +130,6 @@ export class OnOffice implements INodeType {
 		let resource = this.getNodeParameter('resource', 0) as string;
 		let operation = this.getNodeParameter('operation', 0) as string;
 
-		if (resource === 'relation' && operation === 'read') {
-			resource = 'idsfromrelation';
-			operation = 'get';
-		}
-
 		const credentials = (await this.getCredentials(
 			'onOfficeApi',
 		)) as ICredentialDataDecryptedObject;
@@ -140,186 +138,218 @@ export class OnOffice implements INodeType {
 		const apiToken = credentials.apiToken as string;
 
 		for (let i = 0; i < items.length; i++) {
-			if (operation === 'create' || (operation === 'modify' && resource === 'relation')) {
-				if (resource === 'relation') {
-					const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+			switch (resource) {
+				case 'relation':
+					{
+						const relationtype = `urn:onoffice-de-ns:smart:2.5:relationTypes:${this.getNodeParameter(
+							'parentType',
+							i,
+							null,
+						)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null)
+							? ':' + this.getNodeParameter('relation', i, null)
+							: ''
+							}`;
 
-					const tempRelationinfo: Record<string, unknown> = {};
-					if (additionalFields.relationInfo) {
-						const customRelationInfo = (additionalFields.relationInfo as IDataObject).customRelationInfo as IDataObject[];
+						if (operation === 'create' || operation === 'update') {
+							const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
-						if (customRelationInfo) {
-							for (const customProperty of customRelationInfo) {
-								tempRelationinfo[customProperty.key as string] = customProperty.value;
+							const tempRelationinfo: Record<string, unknown> = {};
+							if (additionalFields.relationInfo) {
+								const customRelationInfo = (additionalFields.relationInfo as IDataObject)
+									.customRelationInfo as IDataObject[];
+
+								if (customRelationInfo) {
+									for (const customProperty of customRelationInfo) {
+										tempRelationinfo[customProperty.key as string] = customProperty.value;
+									}
+								}
 							}
+							const relationinfo = Object.keys(tempRelationinfo).length
+								? tempRelationinfo
+								: undefined;
+
+							const parentIds = this.getNodeParameter('parentids', i, null) || [
+								this.getNodeParameter('parentid', i, null),
+							];
+							const childIds = this.getNodeParameter('childids', i, null) || [
+								this.getNodeParameter('childid', i, null),
+							];
+
+							const onOfficeAction = operation === 'update' ? 'modify' : operation;
+
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								onOfficeAction,
+								resource,
+								{
+									relationtype,
+									parentid: parentIds,
+									childid: childIds,
+									relationinfo,
+								},
+								'relation',
+							);
+
+							returnData.push(result.length ? result : [{ success: true }]);
+						}
+
+						if (operation === 'delete') {
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								operation,
+								resource,
+								{
+									relationtype,
+									parentid: this.getNodeParameter('parentid', i, null),
+									childid: this.getNodeParameter('childid', i, null),
+								},
+								'relation',
+							);
+
+							returnData.push(result.length ? result : [{ success: true }]);
+						}
+						if (operation === 'read') {
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'get',
+								'idsfromrelation',
+								{
+									relationtype,
+									parentids: this.getNodeParameter('parentids', i, null),
+									childids: this.getNodeParameter('childids', i, null),
+								},
+							);
+
+							returnData.push(result);
 						}
 					}
-					const relationinfo = Object.keys(tempRelationinfo).length ? tempRelationinfo : undefined;
+					break;
+				case 'estate':
+				case 'address':
+					{
+						if (operation === 'read') {
+							const dataFields = [
+								...(this.getNodeParameter('data', i) as string[]),
+								...(this.getNodeParameter('specialData', i) as string[]),
+							];
 
-					const relationtype = `urn:onoffice-de-ns:smart:2.5:relationTypes:${this.getNodeParameter('parentType', i, null)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null) ? ':' + this.getNodeParameter('relation', i, null) : ''}`
+							const additionalFields = this.getNodeParameter(
+								'additionalFields',
+								i,
+							) as OnOfficeReadAdditionalFields;
 
-					const parentIds = this.getNodeParameter('parentids', i, null) || [this.getNodeParameter('parentid', i, null)];
-					const childIds = this.getNodeParameter('childids', i, null) || [this.getNodeParameter('childid', i, null)];
+							const parameters = {
+								data: dataFields,
+								recordids: additionalFields.recordIds,
+								filterid: additionalFields.filterId,
+								filter: createFilterParameter(additionalFields.filters),
+								listlimit: additionalFields.limit,
+								listoffset: additionalFields.offset,
+								sortby: additionalFields.sortBy,
+								sortorder: additionalFields.order,
+								formatoutput: additionalFields.formatOutput,
+								outputlanguage: additionalFields.language,
+								countryIsoCodeType: additionalFields.countryIsoCodeType || undefined,
+								estatelanguage: additionalFields.estateLanguage,
+								addestatelanguage: additionalFields.addEstateLanguage,
+								addMainLangId: additionalFields.addMainLangId,
+								georangesearch: additionalFields.geoRangeSearch,
+							};
 
-					const result = await onOfficeApiAction(
-						this.getNode(),
-						request,
-						apiSecret,
-						apiToken,
-						operation,
-						resource,
-						{
-							relationtype,
-							parentid: parentIds,
-							childid: childIds,
-							relationinfo,
-						},
-						'relation',
-					);
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'read',
+								resource,
+								parameters,
+							);
 
-					returnData.push(result.length ? result : [{ success: true }]);
-				}
-			}
-			if (operation === 'delete') {
-				if (resource === 'relation') {
-					const relationtype = `urn:onoffice-de-ns:smart:2.5:relationTypes:${this.getNodeParameter('parentType', i, null)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null) ? ':' + this.getNodeParameter('relation', i, null) : ''}`
+							returnData.push(result);
+						}
+						if (operation === 'update') {
+							const resourceId = this.getNodeParameter('resourceId', i) as string;
 
-					const parentid = this.getNodeParameter('parentid', i, null) as string | string[] | null;
-					const childid = this.getNodeParameter('childid', i, null) as string | string[] | null;
+							const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 
-					const result = await onOfficeApiAction(
-						this.getNode(),
-						request,
-						apiSecret,
-						apiToken,
-						operation,
-						resource,
-						{
-							relationtype,
-							parentid: typeof parentid === 'string' ? parentid : parentid?.[0],
-							childid: typeof childid === 'string' ? childid : childid?.[0],
-						},
-						'relation',
-					);
+							const properties: Record<string, unknown> = {};
+							if (additionalFields.customPropertiesUi) {
+								const customProperties = (additionalFields.customPropertiesUi as IDataObject)
+									.customPropertiesValues as IDataObject[];
 
-					returnData.push(result.length ? result : [{ success: true }]);
-				}
-			}
-			if (operation === 'read') {
-				const dataFields = [
-					...(this.getNodeParameter('data', i) as string[]),
-					...(this.getNodeParameter('specialData', i) as string[]),
-				];
+								if (customProperties) {
+									for (const customProperty of customProperties) {
+										properties[customProperty.property as string] = customProperty.value;
+									}
+								}
+							}
 
-				const additionalFields = this.getNodeParameter(
-					'additionalFields',
-					i,
-				) as OnOfficeReadAdditionalFields;
+							const parameters = properties;
 
-				const parameters = {
-					data: dataFields,
-					recordids: additionalFields.recordIds,
-					filterid: additionalFields.filterId,
-					filter: createFilterParameter(additionalFields.filters),
-					listlimit: additionalFields.limit,
-					listoffset: additionalFields.offset,
-					sortby: additionalFields.sortBy,
-					sortorder: additionalFields.order,
-					formatoutput: additionalFields.formatOutput,
-					outputlanguage: additionalFields.language,
-					countryIsoCodeType: additionalFields.countryIsoCodeType || undefined,
-					estatelanguage: additionalFields.estateLanguage,
-					addestatelanguage: additionalFields.addEstateLanguage,
-					addMainLangId: additionalFields.addMainLangId,
-					georangesearch: additionalFields.geoRangeSearch,
-				};
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'modify',
+								resource,
+								parameters,
+								resourceId,
+							);
 
-				if (resource === 'address' || resource === 'estate') {
-					const result = await onOfficeApiAction(
-						this.getNode(),
-						request,
-						apiSecret,
-						apiToken,
-						'read',
-						resource,
-						parameters,
-					);
-
-					returnData.push(result);
-				}
-			}
-			if (operation === 'get') {
-				if (resource === 'fields' || resource === 'searchcriterias' || resource === 'searchCriteriaFields' || resource === 'idsfromrelation') {
-					const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
-
-					// Get relation
-					const relationtype = (resource === 'idsfromrelation' && operation === 'get') ?
-						`urn:onoffice-de-ns:smart:2.5:relationTypes:${this.getNodeParameter('parentType', i, null)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null) ? ':' + this.getNodeParameter('relation', i, null) : ''}`
-						: undefined;
-					const parentids = this.getNodeParameter('useChildIds', i, null) === false ? this.getNodeParameter('parentids', i, null) : undefined;
-					const childids = this.getNodeParameter('useChildIds', i, null) === true ? this.getNodeParameter('childids', i, null) : undefined;
-
-					const parameters = {
-						modules: this.getNodeParameter('modules', i, null) as string[] | undefined,
-						labels: additionalFields.labels,
-						language: additionalFields.language,
-						fieldList: additionalFields.fieldList,
-						showOnlyInactive: additionalFields.showOnlyInactive,
-						listlimit: additionalFields.limit,
-						realDataTypes: additionalFields.realDataTypes,
-						showFieldMeasureFormat: additionalFields.showFieldMeasureFormat,
-						ids: this.getNodeParameter('ids', i, null) as string[] | undefined,
-						mode: this.getNodeParameter('mode', i, null) as string | undefined,
-						relationtype,
-						parentids,
-						childids,
-					};
-
-					const result = await onOfficeApiAction(
-						this.getNode(),
-						request,
-						apiSecret,
-						apiToken,
-						'get',
-						resource,
-						parameters,
-					);
-
-					returnData.push(result);
-				}
-			}
-			if (operation === 'update') {
-				const resourceId = this.getNodeParameter('resourceId', i) as string;
-
-				const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-
-				const properties: Record<string, unknown> = {};
-				if (additionalFields.customPropertiesUi) {
-					const customProperties = (additionalFields.customPropertiesUi as IDataObject).customPropertiesValues as IDataObject[];
-
-					if (customProperties) {
-						for (const customProperty of customProperties) {
-							properties[customProperty.property as string] = customProperty.value;
+							returnData.push(result);
 						}
 					}
-				}
+					break;
+				case 'fields':
+				case 'searchcriterias':
+				case 'searchCriteriaFields':
+					{
+						if (operation === 'get') {
+							const additionalFields = this.getNodeParameter(
+								'additionalFields',
+								i,
+								{},
+							) as IDataObject;
 
-				const parameters = properties;
+							const parameters = {
+								modules: this.getNodeParameter('modules', i, null) as string[] | undefined,
+								labels: additionalFields.labels,
+								language: additionalFields.language,
+								fieldList: additionalFields.fieldList,
+								showOnlyInactive: additionalFields.showOnlyInactive,
+								listlimit: additionalFields.limit,
+								realDataTypes: additionalFields.realDataTypes,
+								showFieldMeasureFormat: additionalFields.showFieldMeasureFormat,
+								ids: this.getNodeParameter('ids', i, null) as string[] | undefined,
+								mode: this.getNodeParameter('mode', i, null) as string | undefined,
+							};
 
-				if (resource === 'address' || resource === 'estate') {
-					const result = await onOfficeApiAction(
-						this.getNode(),
-						request,
-						apiSecret,
-						apiToken,
-						'modify',
-						resource,
-						parameters,
-						resourceId,
-					);
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'get',
+								resource,
+								parameters,
+							);
 
-					returnData.push(result);
-				}
+							returnData.push(result);
+						}
+					}
+					break;
+				default:
 			}
 		}
 
