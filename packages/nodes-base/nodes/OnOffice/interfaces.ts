@@ -1,5 +1,5 @@
 // Types describing the onOffice API
-export type OnOfficeAction = 'get' | 'read' | 'modify';
+export type OnOfficeAction = 'get' | 'read' | 'modify' | 'create';
 export type OnOfficeActionId = `urn:onoffice-de-ns:smart:2.5:smartml:action:${OnOfficeAction}`;
 export type OnOfficeResource = 'estate' | 'address' | 'fields' | 'searchcriterias' | 'searchCriteriaFields' | 'relation' | 'idsfromrelation';
 

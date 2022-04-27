@@ -140,6 +140,43 @@ export class OnOffice implements INodeType {
 		const apiToken = credentials.apiToken as string;
 
 		for (let i = 0; i < items.length; i++) {
+			if (operation === 'create') {
+				if (resource === 'relation') {
+					const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+
+					const tempRelationinfo: Record<string, unknown> = {};
+					if (additionalFields.relationInfo) {
+						const customRelationInfo = (additionalFields.relationInfo as IDataObject).customRelationInfo as IDataObject[];
+
+						if (customRelationInfo) {
+							for (const customProperty of customRelationInfo) {
+								tempRelationinfo[customProperty.key as string] = customProperty.value;
+							}
+						}
+					}
+					const relationinfo = Object.keys(tempRelationinfo).length ? tempRelationinfo : undefined;
+
+					const relationtype = `urn:onoffice-de-ns:smart:2.5:relationTypes:${this.getNodeParameter('parentType', i, null)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null) ? ':' + this.getNodeParameter('relation', i, null) : ''}`
+
+					const result = await onOfficeApiAction(
+						this.getNode(),
+						request,
+						apiSecret,
+						apiToken,
+						'create',
+						resource,
+						{
+							relationtype,
+							parentid: this.getNodeParameter('parentid', i, null),
+							childid: this.getNodeParameter('childid', i, null),
+							relationinfo,
+						},
+						'relation',
+					);
+
+					returnData.push(result);
+				}
+			}
 			if (operation === 'read') {
 				const dataFields = [
 					...(this.getNodeParameter('data', i) as string[]),
