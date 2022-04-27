@@ -72,7 +72,7 @@ export const onOfficeApiAction = async <ElementType = Record<string, unknown> | 
 	const timestamp = Math.floor(Date.now() / 1000) + '';
 	const actionid = `urn:onoffice-de-ns:smart:2.5:smartml:action:${actionType}`;
 
-	const sortedParameters = Object.fromEntries(Object.entries(parameters).sort());
+	const sortedParameters = Object.keys(parameters).length ? Object.fromEntries(Object.entries(parameters).sort()) : { a: null };
 
 	console.log('Parameters: ', JSON.stringify(sortedParameters));
 
