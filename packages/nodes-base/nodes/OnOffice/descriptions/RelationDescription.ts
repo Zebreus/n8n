@@ -419,11 +419,12 @@ export const relationFields: INodeProperties[] = [
     },
     {
         displayName: 'Parent IDs',
-        name: 'ids',
+        name: 'parentids',
         type: 'string',
         typeOptions: {
             multipleValues: true,
         },
+        required: true,
         default: [],
         description: 'An array of IDs to look for linked IDs on the other side.',
         displayOptions: {
@@ -436,11 +437,12 @@ export const relationFields: INodeProperties[] = [
     },
     {
         displayName: 'Child IDs',
-        name: 'ids',
+        name: 'childids',
         type: 'string',
         typeOptions: {
             multipleValues: true,
         },
+        required: true,
         default: [],
         description: 'An array of IDs to look for linked IDs on the other side.',
         displayOptions: {
