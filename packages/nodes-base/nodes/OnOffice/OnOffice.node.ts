@@ -16,13 +16,9 @@ import {
 } from './descriptions/FieldConfigurationDescription';
 import { createFilterParameter, getModuleDescription, onOfficeApiAction } from './GenericFunctions';
 import {
-	searchCriteriasFields,
-	searchCriteriasOperations,
-} from './descriptions/SearchCriteriasDescription';
-import {
-	searchCriteriaFieldsFields,
-	searchCriteriaFieldsOperations,
-} from './descriptions/SearchCriteriaFieldsDescription';
+	searchCriteriaFields,
+	searchCriteriaOperations,
+} from './descriptions/SearchCriteriaDescription';
 import { relationFields, relationOperations } from './descriptions/RelationDescription';
 
 export class OnOffice implements INodeType {
@@ -66,12 +62,8 @@ export class OnOffice implements INodeType {
 						value: 'fields',
 					},
 					{
-						name: 'Search Criterias',
-						value: 'searchcriterias',
-					},
-					{
-						name: 'Search Criteria Fields',
-						value: 'searchCriteriaFields',
+						name: 'Search Criteria',
+						value: 'searchcriteria',
 					},
 					{
 						name: 'Relation',
@@ -92,11 +84,8 @@ export class OnOffice implements INodeType {
 			...fieldConfigurationOperations,
 			...fieldConfigurationFields,
 
-			...searchCriteriasOperations,
-			...searchCriteriasFields,
-
-			...searchCriteriaFieldsOperations,
-			// ...searchCriteriaFieldsFields,
+			...searchCriteriaOperations,
+			...searchCriteriaFields,
 
 			...relationOperations,
 			...relationFields,
@@ -375,8 +364,7 @@ export class OnOffice implements INodeType {
 						}
 					}
 					break;
-				case 'searchcriterias':
-				case 'searchCriteriaFields':
+				case 'searchcriteria':
 					{
 						if (operation === 'read') {
 							const parameters = {
@@ -390,8 +378,21 @@ export class OnOffice implements INodeType {
 								apiSecret,
 								apiToken,
 								'get',
-								resource,
+								'searchcriterias',
 								parameters,
+							);
+
+							returnData.push(result);
+						}
+						if (operation === 'listFields') {
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'get',
+								'searchCriteriaFields',
+								{},
 							);
 
 							returnData.push(result);

@@ -1,13 +1,13 @@
 import { INodeProperties } from 'n8n-workflow';
 
-export const searchCriteriasOperations: INodeProperties[] = [
+export const searchCriteriaOperations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
 		name: 'operation',
 		type: 'options',
 		displayOptions: {
 			show: {
-				resource: ['searchcriterias'],
+				resource: ['searchcriteria'],
 			},
 		},
 		options: [
@@ -16,13 +16,18 @@ export const searchCriteriasOperations: INodeProperties[] = [
 				value: 'read',
 				description: 'Get all search criteria (fields + values) for a list of addresses or search criteria',
 			},
+			{
+				name: 'List fields',
+				value: 'listFields',
+				description: 'With this API call all fields can be queried that are marked / selected as search criteria',
+			},
 		],
 		default: 'read',
 		description: 'The operation to perform.',
 	},
 ];
 
-export const searchCriteriasFields: INodeProperties[] = [
+export const searchCriteriaFields: INodeProperties[] = [
 	{
 		displayName: 'Mode',
 		name: 'mode',
@@ -31,7 +36,7 @@ export const searchCriteriasFields: INodeProperties[] = [
 		default: 'searchcriteria',
 		displayOptions: {
 			show: {
-				resource: ['searchcriterias'],
+				resource: ['searchcriteria'],
 				operation: ['read'],
 			},
 		},
@@ -61,7 +66,7 @@ export const searchCriteriasFields: INodeProperties[] = [
 		default: [],
 		displayOptions: {
 			show: {
-				resource: ['searchcriterias'],
+				resource: ['searchcriteria'],
 				operation: ['read'],
 			},
 		},
