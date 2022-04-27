@@ -1,6 +1,7 @@
 import { INodeProperties } from 'n8n-workflow';
 import { commonReadDescription } from './CommonReadDescription';
 import {
+	generateCreateDataFieldsDescription,
 	generateReadAdditionalFieldsDescription,
 	generateReadDataFieldsDescription,
 	generateUpdateDataFieldsDescription,
@@ -39,6 +40,10 @@ export const addressOperations: INodeProperties[] = [
 ];
 
 export const addressFields: INodeProperties[] = [
+	...generateCreateDataFieldsDescription({
+		resource: 'address',
+		loadOptionsMethod: 'getAddressProperties',
+	}),
 	...generateUpdateDataFieldsDescription({
 		resource: 'address',
 		loadOptionsMethod: 'getAddressProperties',

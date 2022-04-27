@@ -236,6 +236,37 @@ export class OnOffice implements INodeType {
 				case 'estate':
 				case 'address':
 					{
+						if (operation === 'create') {
+							const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+
+							const properties: Record<string, unknown> = {};
+							if (additionalFields.customPropertiesUi) {
+								const customProperties = (additionalFields.customPropertiesUi as IDataObject)
+									.customPropertiesValues as IDataObject[];
+
+								if (customProperties) {
+									for (const customProperty of customProperties) {
+										properties[customProperty.property as string] = customProperty.value;
+									}
+								}
+							}
+
+							const parameters = {
+								...properties,
+							};
+
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'create',
+								resource,
+								parameters,
+							);
+
+							returnData.push(result);
+						}
 						if (operation === 'read') {
 							const dataFields = [
 								...(this.getNodeParameter('data', i) as string[]),

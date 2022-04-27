@@ -2,7 +2,6 @@ import { INodeProperties, INodePropertyOptions } from 'n8n-workflow';
 import { OnOfficeReadAdditionalFieldName, OnOfficeResource } from '../interfaces';
 import { commonReadDescription } from './CommonReadDescription';
 
-
 export const generateReadDataFieldsDescription = ({
 	resource,
 	specialFields,
@@ -25,22 +24,20 @@ export const generateReadDataFieldsDescription = ({
 				},
 			},
 			description: 'The data fields to fetch',
-			...(
-				loadOptionsMethod ?
-					{
-						type: 'options',
-						typeOptions: {
-							loadOptionsMethod,
-							multipleValues: true,
-						},
-					} : {
-						type: 'string',
-						typeOptions: {
-							multipleValues: true,
-						},
-					}
-
-			),
+			...(loadOptionsMethod
+				? {
+					type: 'options',
+					typeOptions: {
+						loadOptionsMethod,
+						multipleValues: true,
+					},
+				}
+				: {
+					type: 'string',
+					typeOptions: {
+						multipleValues: true,
+					},
+				}),
 		},
 		...(specialFields
 			? [
@@ -87,12 +84,10 @@ export const generateReadAdditionalFieldsDescription = ({
 		},
 	] as INodeProperties[];
 
-
-
 export const generateUpdateDataFieldsDescription = ({
 	resource,
 	loadOptionsMethod,
-	additionalFields
+	additionalFields,
 }: {
 	resource: OnOfficeResource;
 	loadOptionsMethod?: string;
@@ -146,12 +141,14 @@ export const generateUpdateDataFieldsDescription = ({
 
 									default: '',
 									description: 'Name of the property.',
-									...(loadOptionsMethod ? {
-										type: 'options',
-										typeOptions: {
-											loadOptionsMethod,
-										},
-									} : { type: 'string' }),
+									...(loadOptionsMethod
+										? {
+											type: 'options',
+											typeOptions: {
+												loadOptionsMethod,
+											},
+										}
+										: { type: 'string' }),
 								},
 								{
 									displayName: 'Value',
@@ -163,8 +160,75 @@ export const generateUpdateDataFieldsDescription = ({
 							],
 						},
 					],
-					...(additionalFields || [])
 				},
+				...(additionalFields || []),
+			],
+		},
+	] as INodeProperties[];
+
+export const generateCreateDataFieldsDescription = ({
+	resource,
+	loadOptionsMethod,
+	additionalFields,
+}: {
+	resource: OnOfficeResource;
+	loadOptionsMethod?: string;
+	additionalFields?: INodeProperties[];
+}) =>
+	[
+		{
+			displayName: 'Additional Fields',
+			name: 'additionalFields',
+			type: 'collection',
+			placeholder: 'Add Field',
+			default: {},
+			displayOptions: {
+				show: {
+					resource: [resource],
+					operation: ['create'],
+				},
+			},
+			options: [
+				{
+					displayName: 'Custom Properties',
+					name: 'customPropertiesUi',
+					placeholder: 'Add Property',
+					type: 'fixedCollection',
+					typeOptions: {
+						multipleValues: true,
+					},
+					default: {},
+					options: [
+						{
+							name: 'customPropertiesValues',
+							displayName: 'Custom Property',
+							values: [
+								{
+									displayName: 'Property',
+									name: 'property',
+									default: '',
+									description: 'Name of the property.',
+									...(loadOptionsMethod
+										? {
+											type: 'options',
+											typeOptions: {
+												loadOptionsMethod,
+											},
+										}
+										: { type: 'string' }),
+								},
+								{
+									displayName: 'Value',
+									name: 'value',
+									type: 'string',
+									default: '',
+									description: 'Value of the property',
+								},
+							],
+						},
+					],
+				},
+				...(additionalFields || []),
 			],
 		},
 	] as INodeProperties[];
