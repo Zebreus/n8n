@@ -20,6 +20,7 @@ import {
 	searchCriteriaOperations,
 } from './descriptions/SearchCriteriaDescription';
 import { relationFields, relationOperations } from './descriptions/RelationDescription';
+import { actionKindTypeFields, actionKindTypeOperations } from './descriptions/ActionKindTypeDescription';
 
 export class OnOffice implements INodeType {
 	description: INodeTypeDescription = {
@@ -69,6 +70,10 @@ export class OnOffice implements INodeType {
 						name: 'Relation',
 						value: 'relation',
 					},
+					{
+						name: 'Action kind and type',
+						value: 'actionkindtype',
+					},
 				],
 				default: 'address',
 				required: true,
@@ -89,6 +94,9 @@ export class OnOffice implements INodeType {
 
 			...relationOperations,
 			...relationFields,
+
+			...actionKindTypeOperations,
+			...actionKindTypeFields,
 		],
 	};
 
@@ -116,8 +124,8 @@ export class OnOffice implements INodeType {
 
 		const returnData = [];
 
-		let resource = this.getNodeParameter('resource', 0) as string;
-		let operation = this.getNodeParameter('operation', 0) as string;
+		const resource = this.getNodeParameter('resource', 0) as string;
+		const operation = this.getNodeParameter('operation', 0) as string;
 
 		const credentials = (await this.getCredentials(
 			'onOfficeApi',
@@ -393,6 +401,27 @@ export class OnOffice implements INodeType {
 								'get',
 								'searchCriteriaFields',
 								{},
+							);
+
+							returnData.push(result);
+						}
+					}
+					break;
+				case 'actionkindtype':
+					{
+						if (operation === 'read') {
+							const parameters = {
+								lang: this.getNodeParameter('language', i, null),
+							};
+
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'get',
+								'actionkindtypes',
+								parameters,
 							);
 
 							returnData.push(result);
