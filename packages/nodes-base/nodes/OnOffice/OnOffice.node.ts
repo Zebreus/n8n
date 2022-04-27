@@ -187,10 +187,12 @@ export class OnOffice implements INodeType {
 				if (resource === 'fields' || resource === 'searchcriterias' || resource === 'searchCriteriaFields' || resource === 'idsfromrelation') {
 					const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
 
+					// Get relation
 					const relationtype = (resource === 'idsfromrelation' && operation === 'get') ?
-						`urn:onoffice-de-ns:smart:2.5:relationTypes:${this.getNodeParameter('parentType', i, null)}:${this.getNodeParameter('childType', i, null)}${additionalFields.relation ? ':' + additionalFields.relation : ''}`
+						`urn:onoffice-de-ns:smart:2.5:relationTypes:${this.getNodeParameter('parentType', i, null)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null) ? ':' + this.getNodeParameter('relation', i, null) : ''}`
 						: undefined;
-
+					const parentids = this.getNodeParameter('useChildIds', i, null) === false ? this.getNodeParameter('ids', i, null) : undefined;
+					const childids = this.getNodeParameter('useChildIds', i, null) === true ? this.getNodeParameter('ids', i, null) : undefined;
 
 					const parameters = {
 						modules: this.getNodeParameter('modules', i, null) as string[] | undefined,
@@ -204,8 +206,8 @@ export class OnOffice implements INodeType {
 						ids: this.getNodeParameter('ids', i, null) as string[] | undefined,
 						mode: this.getNodeParameter('mode', i, null) as string | undefined,
 						relationtype,
-						parentids: additionalFields.parentids,
-						childids: additionalFields.childids,
+						parentids,
+						childids,
 					};
 
 					const result = await onOfficeApiAction(
