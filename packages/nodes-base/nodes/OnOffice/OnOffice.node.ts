@@ -110,8 +110,9 @@ export class OnOffice implements INodeType {
 			async getAddressProperties(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				const availableFields = await getModuleDescription.call(this, 'address');
 				const fieldNameOptions = availableFields.map((field) => ({
-					name: field.label,
+					name: `${field.label} (${field.name})`,
 					value: field.name,
+					description: `Field name: ${field.name}`,
 				}));
 				return fieldNameOptions;
 			},
@@ -231,6 +232,82 @@ export class OnOffice implements INodeType {
 					}
 					break;
 				case 'estate':
+					{
+						if (operation === 'read') {
+							const dataFields = [
+								...(this.getNodeParameter('data', i) as string[]),
+								...(this.getNodeParameter('specialData', i) as string[]),
+							];
+
+							const additionalFields = this.getNodeParameter(
+								'additionalFields',
+								i,
+							) as OnOfficeReadAdditionalFields;
+
+							const parameters = {
+								data: dataFields,
+								recordids: additionalFields.recordIds,
+								filterid: additionalFields.filterId,
+								filter: createFilterParameter(additionalFields.filters),
+								listlimit: additionalFields.limit,
+								listoffset: additionalFields.offset,
+								sortby: additionalFields.sortBy,
+								sortorder: additionalFields.order,
+								formatoutput: additionalFields.formatOutput,
+								outputlanguage: additionalFields.language,
+								countryIsoCodeType: additionalFields.countryIsoCodeType || undefined,
+								estatelanguage: additionalFields.estateLanguage,
+								addestatelanguage: additionalFields.addEstateLanguage,
+								addMainLangId: additionalFields.addMainLangId,
+								georangesearch: additionalFields.geoRangeSearch,
+							};
+
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'read',
+								resource,
+								parameters,
+							);
+
+							returnData.push(result);
+						}
+						if (operation === 'update') {
+							const resourceId = this.getNodeParameter('resourceId', i) as string;
+
+							const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+
+							const properties: Record<string, unknown> = {};
+							if (additionalFields.customPropertiesUi) {
+								const customProperties = (additionalFields.customPropertiesUi as IDataObject)
+									.customPropertiesValues as IDataObject[];
+
+								if (customProperties) {
+									for (const customProperty of customProperties) {
+										properties[customProperty.property as string] = customProperty.value;
+									}
+								}
+							}
+
+							const parameters = properties;
+
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'modify',
+								resource,
+								parameters,
+								resourceId,
+							);
+
+							returnData.push(result);
+						}
+					}
+					break;
 				case 'address':
 					{
 						if (operation === 'create') {
@@ -249,7 +326,24 @@ export class OnOffice implements INodeType {
 							}
 
 							const parameters = {
+
+								phone: additionalFields.phone ?? undefined,
+								phone_private: additionalFields.phonePrivate,
+								phone_business: additionalFields.phoneBusiness,
+								mobile: additionalFields.mobile,
+								default_phone: additionalFields.defaultPhone,
+								fax: additionalFields.fax,
+								fax_private: additionalFields.faxPrivate,
+								fax_business: additionalFields.faxBusiness,
+								default_fax: additionalFields.defaultFax,
+								email: additionalFields.email,
+								email_business: additionalFields.emailBusiness,
+								email_private: additionalFields.emailPrivate,
+								default_email: additionalFields.defaultEmail,
+								Status: additionalFields.status,
 								...properties,
+								checkDuplicate: additionalFields.checkDuplicate,
+								noOverrideByDuplicate: additionalFields.noOverrideByDuplicate,
 							};
 
 							const result = await onOfficeApiAction(
