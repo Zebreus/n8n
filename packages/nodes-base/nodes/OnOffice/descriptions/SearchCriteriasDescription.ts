@@ -12,8 +12,8 @@ export const searchCriteriasOperations: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Get',
-				value: 'get',
+				name: 'Read',
+				value: 'read',
 				description: 'Get all search criteria (fields + values) for a list of addresses or search criteria',
 			},
 		],
@@ -32,7 +32,7 @@ export const searchCriteriasFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['searchcriterias'],
-				operation: ['get'],
+				operation: ['read'],
 			},
 		},
 		options: [
@@ -62,7 +62,7 @@ export const searchCriteriasFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['searchcriterias'],
-				operation: ['get'],
+				operation: ['read'],
 			},
 		},
 		typeOptions: {

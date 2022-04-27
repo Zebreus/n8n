@@ -12,12 +12,12 @@ export const searchCriteriaFieldsOperations: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Get',
-				value: 'get',
+				name: 'Read',
+				value: 'read',
 				description: 'With this API call all fields can be queried that are marked / selected as search criteria',
 			},
 		],
-		default: 'get',
+		default: 'read',
 		description: 'The operation to perform.',
 	},
 ];

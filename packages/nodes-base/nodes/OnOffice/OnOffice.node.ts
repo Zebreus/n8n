@@ -343,10 +343,8 @@ export class OnOffice implements INodeType {
 					}
 					break;
 				case 'fields':
-				case 'searchcriterias':
-				case 'searchCriteriaFields':
 					{
-						if (operation === 'get') {
+						if (operation === 'read') {
 							const additionalFields = this.getNodeParameter(
 								'additionalFields',
 								i,
@@ -359,9 +357,29 @@ export class OnOffice implements INodeType {
 								language: additionalFields.language,
 								fieldList: additionalFields.fieldList,
 								showOnlyInactive: additionalFields.showOnlyInactive,
-								listlimit: additionalFields.limit,
 								realDataTypes: additionalFields.realDataTypes,
 								showFieldMeasureFormat: additionalFields.showFieldMeasureFormat,
+							};
+
+							const result = await onOfficeApiAction(
+								this.getNode(),
+								request,
+								apiSecret,
+								apiToken,
+								'get',
+								'fields',
+								parameters,
+							);
+
+							returnData.push(result);
+						}
+					}
+					break;
+				case 'searchcriterias':
+				case 'searchCriteriaFields':
+					{
+						if (operation === 'read') {
+							const parameters = {
 								ids: this.getNodeParameter('ids', i, null) as string[] | undefined,
 								mode: this.getNodeParameter('mode', i, null) as string | undefined,
 							};

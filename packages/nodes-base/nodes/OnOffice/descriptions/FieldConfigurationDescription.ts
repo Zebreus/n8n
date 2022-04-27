@@ -12,8 +12,8 @@ export const fieldConfigurationOperations: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Get',
-				value: 'get',
+				name: 'Read',
+				value: 'read',
 				description: 'Request field configuration',
 			},
 		],
@@ -32,7 +32,7 @@ export const fieldConfigurationFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['fields'],
-				operation: ['get'],
+				operation: ['read'],
 			},
 		},
 		options: [
@@ -92,7 +92,7 @@ export const fieldConfigurationFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['fields'],
-				operation: ['get'],
+				operation: ['read'],
 			},
 		},
 		options: [
