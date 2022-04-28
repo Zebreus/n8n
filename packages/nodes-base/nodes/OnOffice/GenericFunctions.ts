@@ -30,6 +30,13 @@ const md5 = (str: string) => {
 	return createHash('md5').update(str).digest('hex');
 };
 
+const unicodeEscape = (text: string) =>
+	text.replace(/[\s\S]/g, (character) =>
+		character.charCodeAt(0) < 128
+			? character
+			: '\\u' + ('0000' + character.charCodeAt(0).toString(16)).slice(-4),
+	);
+
 const assertSuccessfulResponse: <ElementType>(
 	responseData: OnOfficeResponse<ElementType>,
 	node: INode,
@@ -95,9 +102,8 @@ export const onOfficeApiAction = async <
 	const hmac = md5(
 		apiSecret +
 		md5(
-			`${JSON.stringify(sortedParameters).replace(
-				'/',
-				'\\/',
+			`${unicodeEscape(
+				JSON.stringify(sortedParameters).replace('/', '\\/'),
 			)},${apiToken},${actionid},${identifier},${resourceid},${apiSecret},${timestamp},${resourceType}`,
 		),
 	);
