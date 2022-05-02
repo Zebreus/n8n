@@ -14,13 +14,21 @@ import {
 	fieldConfigurationFields,
 	fieldConfigurationOperations,
 } from './descriptions/FieldConfigurationDescription';
-import { convertMultiselectFieldsToArray, createFilterParameter, getModuleDescription, onOfficeApiAction } from './GenericFunctions';
+import {
+	convertMultiselectFieldsToArray,
+	createFilterParameter,
+	getModuleDescription,
+	onOfficeApiAction,
+} from './GenericFunctions';
 import {
 	searchCriteriaFields,
 	searchCriteriaOperations,
 } from './descriptions/SearchCriteriaDescription';
 import { relationFields, relationOperations } from './descriptions/RelationDescription';
-import { actionKindTypeFields, actionKindTypeOperations } from './descriptions/ActionKindTypeDescription';
+import {
+	actionKindTypeFields,
+	actionKindTypeOperations,
+} from './descriptions/ActionKindTypeDescription';
 
 export class OnOffice implements INodeType {
 	description: INodeTypeDescription = {
@@ -272,7 +280,7 @@ export class OnOffice implements INodeType {
 								parameters,
 							);
 
-							returnData.push(result.map(r => convertMultiselectFieldsToArray(r)));
+							returnData.push(result.map((r) => convertMultiselectFieldsToArray(r)));
 						}
 						if (operation === 'update') {
 							const resourceId = this.getNodeParameter('resourceId', i) as string;
@@ -326,7 +334,6 @@ export class OnOffice implements INodeType {
 							}
 
 							const parameters = {
-
 								phone: additionalFields.phone ?? undefined,
 								phone_private: additionalFields.phonePrivate,
 								phone_business: additionalFields.phoneBusiness,
@@ -397,7 +404,7 @@ export class OnOffice implements INodeType {
 								parameters,
 							);
 
-							returnData.push(result.map(r => convertMultiselectFieldsToArray(r)));
+							returnData.push(result.map((r) => convertMultiselectFieldsToArray(r)));
 						}
 						if (operation === 'update') {
 							const resourceId = this.getNodeParameter('resourceId', i) as string;
@@ -452,7 +459,7 @@ export class OnOffice implements INodeType {
 								showFieldMeasureFormat: additionalFields.showFieldMeasureFormat,
 							};
 
-							const result = await onOfficeApiAction(
+							const result = await onOfficeApiAction<OnOfficeFieldConfiguration<boolean>>(
 								this.getNode(),
 								request,
 								apiSecret,
@@ -462,7 +469,34 @@ export class OnOffice implements INodeType {
 								parameters,
 							);
 
-							returnData.push(result);
+							// Process result for better usability
+							const processedResult = result.flatMap(({ id, elements }) =>
+								Object.entries(elements)
+									.flatMap(([key, value]) =>
+										typeof value !== 'string' ? [[key, value] as const] : [],
+									)
+									.map(([key, { type, length, permittedvalues, compoundFields, label }]) => ({
+										module: id,
+										field: key,
+										type,
+										length,
+										...(permittedvalues
+											? {
+												permittedvalues: Array.isArray(permittedvalues)
+													? permittedvalues.map((value) => ({ value }))
+													: Object.entries(permittedvalues).map(([value, label]) => ({
+														value,
+														label,
+													})),
+											}
+											: {}),
+										compoundFields,
+
+										label,
+									})),
+							);
+
+							returnData.push(processedResult);
 						}
 					}
 					break;
