@@ -152,8 +152,8 @@ export class OnOffice implements INodeType {
 							i,
 							null,
 						)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null)
-							? ':' + this.getNodeParameter('relation', i, null)
-							: ''
+								? ':' + this.getNodeParameter('relation', i, null)
+								: ''
 							}`;
 
 						if (operation === 'create' || operation === 'update') {
@@ -221,6 +221,8 @@ export class OnOffice implements INodeType {
 							returnData.push(result.length ? result : [{ success: true }]);
 						}
 						if (operation === 'read') {
+							const queryByChildId = this.getNodeParameter('queryByChildId', i, false) as boolean;
+
 							const result = await onOfficeApiAction(
 								this.getNode(),
 								request,
@@ -235,7 +237,20 @@ export class OnOffice implements INodeType {
 								},
 							);
 
-							returnData.push(result);
+							// Process result for better usability
+							const processedResult = result.flatMap(({ id, elements }) =>
+								Object.entries(elements).flatMap(([key, values]) =>
+									Array.isArray(values)
+										? values.map((value) => ({
+											module: id,
+											parentId: queryByChildId ? value : key,
+											childId: queryByChildId ? key : value,
+										}))
+										: [],
+								),
+							);
+
+							returnData.push(processedResult);
 						}
 					}
 					break;
