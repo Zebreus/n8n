@@ -227,7 +227,7 @@ export const convertMultiselectFieldsToArray = (
 		elements: Object.fromEntries(
 			Object.entries(record.elements).map(([key, value]) => [
 				key,
-				typeof value === 'string' && value.match(/^(\|[^|]+\|)+$/gm)
+				typeof value === 'string' && value.match(/^[|]?(\|[^|]+\|)+[|]?$/gm)
 					? value.split('|').filter((v) => v)
 					: value,
 			]),
