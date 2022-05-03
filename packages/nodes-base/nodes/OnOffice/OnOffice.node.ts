@@ -19,6 +19,7 @@ import {
 	createFilterParameter,
 	getModuleDescription,
 	onOfficeApiAction,
+	OnOfficeRequestBatch,
 } from './GenericFunctions';
 import {
 	searchCriteriaFields,
@@ -129,21 +130,16 @@ export class OnOffice implements INodeType {
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
-		const request = this.helpers.request;
-
-		const returnData = [];
 
 		const resource = this.getNodeParameter('resource', 0) as string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 
-		const credentials = (await this.getCredentials(
-			'onOfficeApi',
-		)) as ICredentialDataDecryptedObject;
+		const continueOnFail = this.continueOnFail();
 
-		const apiSecret = credentials.apiSecret as string;
-		const apiToken = credentials.apiToken as string;
+		const batch = new OnOfficeRequestBatch(this, continueOnFail ? items.length : 1);
 
-		for (let i = 0; i < items.length; i++) {
+		const results = items.map(async (item, i) => {
+			const returnData = [];
 			switch (resource) {
 				case 'relation':
 					{
@@ -183,8 +179,7 @@ export class OnOffice implements INodeType {
 
 							const onOfficeAction = operation === 'update' ? 'modify' : operation;
 
-							const result = await onOfficeApiAction(
-								this,
+							const result = await batch.request(
 								onOfficeAction,
 								resource,
 								{
@@ -200,8 +195,7 @@ export class OnOffice implements INodeType {
 						}
 
 						if (operation === 'delete') {
-							const result = await onOfficeApiAction(
-								this,
+							const result = await batch.request(
 								operation,
 								resource,
 								{
@@ -217,8 +211,7 @@ export class OnOffice implements INodeType {
 						if (operation === 'read') {
 							const queryByChildId = this.getNodeParameter('queryByChildId', i, false) as boolean;
 
-							const result = await onOfficeApiAction(
-								this,
+							const result = await batch.request(
 								'get',
 								'idsfromrelation',
 								{
@@ -276,8 +269,7 @@ export class OnOffice implements INodeType {
 								georangesearch: additionalFields.geoRangeSearch,
 							};
 
-							const result = await onOfficeApiAction<Record<string, unknown>>(
-								this,
+							const result = await batch.request<Record<string, unknown>>(
 								'read',
 								resource,
 								parameters,
@@ -304,8 +296,7 @@ export class OnOffice implements INodeType {
 
 							const parameters = properties;
 
-							const result = await onOfficeApiAction(
-								this,
+							const result = await batch.request(
 								'modify',
 								resource,
 								parameters,
@@ -353,8 +344,7 @@ export class OnOffice implements INodeType {
 								noOverrideByDuplicate: additionalFields.noOverrideByDuplicate,
 							};
 
-							const result = await onOfficeApiAction(
-								this,
+							const result = await batch.request(
 								'create',
 								resource,
 								parameters,
@@ -391,8 +381,7 @@ export class OnOffice implements INodeType {
 								georangesearch: additionalFields.geoRangeSearch,
 							};
 
-							const result = await onOfficeApiAction<Record<string, unknown>>(
-								this,
+							const result = await batch.request<Record<string, unknown>>(
 								'read',
 								resource,
 								parameters,
@@ -419,8 +408,7 @@ export class OnOffice implements INodeType {
 
 							const parameters = { ...properties };
 
-							const result = await onOfficeApiAction(
-								this,
+							const result = await batch.request(
 								'modify',
 								resource,
 								parameters,
@@ -450,8 +438,7 @@ export class OnOffice implements INodeType {
 								showFieldMeasureFormat: additionalFields.showFieldMeasureFormat,
 							};
 
-							const result = await onOfficeApiAction<OnOfficeFieldConfiguration<boolean>>(
-								this,
+							const result = await batch.request<OnOfficeFieldConfiguration<boolean>>(
 								'get',
 								'fields',
 								parameters,
@@ -496,8 +483,7 @@ export class OnOffice implements INodeType {
 								mode: this.getNodeParameter('mode', i, null) as string | undefined,
 							};
 
-							const result = await onOfficeApiAction(
-								this,
+							const result = await batch.request(
 								'get',
 								'searchcriterias',
 								parameters,
@@ -506,8 +492,7 @@ export class OnOffice implements INodeType {
 							returnData.push(result);
 						}
 						if (operation === 'listFields') {
-							const result = await onOfficeApiAction(
-								this,
+							const result = await batch.request(
 								'get',
 								'searchCriteriaFields',
 								{},
@@ -524,8 +509,7 @@ export class OnOffice implements INodeType {
 								lang: this.getNodeParameter('language', i, null),
 							};
 
-							const result = await onOfficeApiAction(
-								this,
+							const result = await batch.request(
 								'get',
 								'actionkindtypes',
 								parameters,
@@ -537,6 +521,15 @@ export class OnOffice implements INodeType {
 					break;
 				default:
 			}
+			return returnData;
+		});
+
+		let returnData = [];
+		if (continueOnFail) {
+			// @ts-ignore
+			returnData = (await Promise.allSettled(results)).map(outcome => outcome.status === 'rejected' ? [{ error: outcome.reason }] : outcome.value).flat();
+		} else {
+			returnData = (await Promise.all(results)).flat();
 		}
 
 		const result = returnData.flat() as unknown as IDataObject[];

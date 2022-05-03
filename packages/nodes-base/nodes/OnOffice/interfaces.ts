@@ -98,7 +98,7 @@ export type OnOfficeReadAdditionalFields = {
 export type OnOfficeReadAdditionalFieldName = keyof OnOfficeReadAdditionalFields;
 
 export type OnOfficeFieldConfiguration<IncludeLabels extends boolean = false> = Record<string, OnOfficeFieldType<IncludeLabels>> & (IncludeLabels extends true ? { label: string } : {});
-export type OnOfficeFieldValueType = 'multiselect' | 'singleselect' | 'varchar' | 'integer' | 'date' | 'text' | 'float' | 'boolean'
+export type OnOfficeFieldValueType = 'multiselect' | 'singleselect' | 'varchar' | 'integer' | 'date' | 'text' | 'float' | 'boolean';
 
 export type OnOfficeFieldType<IncludeLabels extends boolean = false> = {
 	type: OnOfficeFieldValueType;
@@ -112,4 +112,14 @@ export type OnOfficeFieldType<IncludeLabels extends boolean = false> = {
 	compoundFields: string[];
 	/** Label is only present, if includeLabels was set */
 	label: (IncludeLabels extends true ? string : undefined);
-}
+};
+
+export type OnOfficeActionRequest = {
+	actionid: string;
+	identifier: string;
+	resourcetype: OnOfficeResource;
+	resourceid: string;
+	parameters: Record<string, unknown>;
+	timestamp: string;
+	hmac: string;
+};
