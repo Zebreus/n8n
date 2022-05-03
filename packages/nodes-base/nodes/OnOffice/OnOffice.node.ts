@@ -116,7 +116,7 @@ export class OnOffice implements INodeType {
 
 			// Get all fields of address
 			async getAddressProperties(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const availableFields = await getModuleDescription.call(this, 'address');
+				const availableFields = await getModuleDescription(this, 'address');
 				const fieldNameOptions = availableFields.map((field) => ({
 					name: `${field.label} (${field.name})`,
 					value: field.name,
@@ -152,8 +152,8 @@ export class OnOffice implements INodeType {
 							i,
 							null,
 						)}:${this.getNodeParameter('childType', i, null)}${this.getNodeParameter('relation', i, null)
-								? ':' + this.getNodeParameter('relation', i, null)
-								: ''
+							? ':' + this.getNodeParameter('relation', i, null)
+							: ''
 							}`;
 
 						if (operation === 'create' || operation === 'update') {
@@ -184,10 +184,7 @@ export class OnOffice implements INodeType {
 							const onOfficeAction = operation === 'update' ? 'modify' : operation;
 
 							const result = await onOfficeApiAction(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								onOfficeAction,
 								resource,
 								{
@@ -204,10 +201,7 @@ export class OnOffice implements INodeType {
 
 						if (operation === 'delete') {
 							const result = await onOfficeApiAction(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								operation,
 								resource,
 								{
@@ -224,10 +218,7 @@ export class OnOffice implements INodeType {
 							const queryByChildId = this.getNodeParameter('queryByChildId', i, false) as boolean;
 
 							const result = await onOfficeApiAction(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'get',
 								'idsfromrelation',
 								{
@@ -286,10 +277,7 @@ export class OnOffice implements INodeType {
 							};
 
 							const result = await onOfficeApiAction<Record<string, unknown>>(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'read',
 								resource,
 								parameters,
@@ -317,10 +305,7 @@ export class OnOffice implements INodeType {
 							const parameters = properties;
 
 							const result = await onOfficeApiAction(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'modify',
 								resource,
 								parameters,
@@ -369,10 +354,7 @@ export class OnOffice implements INodeType {
 							};
 
 							const result = await onOfficeApiAction(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'create',
 								resource,
 								parameters,
@@ -410,10 +392,7 @@ export class OnOffice implements INodeType {
 							};
 
 							const result = await onOfficeApiAction<Record<string, unknown>>(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'read',
 								resource,
 								parameters,
@@ -441,10 +420,7 @@ export class OnOffice implements INodeType {
 							const parameters = { ...properties };
 
 							const result = await onOfficeApiAction(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'modify',
 								resource,
 								parameters,
@@ -475,10 +451,7 @@ export class OnOffice implements INodeType {
 							};
 
 							const result = await onOfficeApiAction<OnOfficeFieldConfiguration<boolean>>(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'get',
 								'fields',
 								parameters,
@@ -524,10 +497,7 @@ export class OnOffice implements INodeType {
 							};
 
 							const result = await onOfficeApiAction(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'get',
 								'searchcriterias',
 								parameters,
@@ -537,10 +507,7 @@ export class OnOffice implements INodeType {
 						}
 						if (operation === 'listFields') {
 							const result = await onOfficeApiAction(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'get',
 								'searchCriteriaFields',
 								{},
@@ -558,10 +525,7 @@ export class OnOffice implements INodeType {
 							};
 
 							const result = await onOfficeApiAction(
-								this.getNode(),
-								request,
-								apiSecret,
-								apiToken,
+								this,
 								'get',
 								'actionkindtypes',
 								parameters,

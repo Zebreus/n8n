@@ -76,18 +76,24 @@ const assertSuccessfulActionResponses: <ElementType>(
 // tslint:disable-next-line: no-any
 type requestType = (uriOrObject: any) => Promise<any>;
 
-export const onOfficeApiAction = async <
+export async function onOfficeApiAction<
 	ElementType = Record<string, unknown> | Array<Record<string, unknown>>,
 	>(
-		node: INode,
-		request: requestType,
-		apiSecret: string,
-		apiToken: string,
+		that: IHookFunctions | IExecuteFunctions | IExecuteSingleFunctions | ILoadOptionsFunctions,
 		actionType: OnOfficeAction,
 		resourceType: OnOfficeResource,
 		parameters: Record<string, unknown>,
 		resourceid = '',
-) => {
+) {
+	const node = that.getNode();
+	const request = that.helpers.request;
+	if (!request) {
+		return [];
+	}
+	const credentials = (await that.getCredentials('onOfficeApi')) as ICredentialDataDecryptedObject;
+	const apiSecret = credentials.apiSecret as string;
+	const apiToken = credentials.apiToken as string;
+
 	const identifier = '';
 	const resourcetype = resourceType;
 	const timestamp = Math.floor(Date.now() / 1000) + '';
@@ -150,7 +156,7 @@ export const onOfficeApiAction = async <
 
 	const results = actionResponses[0].data.records;
 	return results;
-};
+}
 
 export const createFilterParameter = (filterConfig?: OnOfficeReadFilterConfiguration) => {
 	const filterOperatorMap = {
@@ -185,17 +191,9 @@ export const createFilterParameter = (filterConfig?: OnOfficeReadFilterConfigura
 };
 
 export async function getModuleDescription(
-	this: IHookFunctions | IExecuteFunctions | IExecuteSingleFunctions | ILoadOptionsFunctions,
+	that: IHookFunctions | IExecuteFunctions | IExecuteSingleFunctions | ILoadOptionsFunctions,
 	module: string,
 ) {
-	const request = this.helpers.request;
-	if (!request) {
-		return [];
-	}
-	const credentials = (await this.getCredentials('onOfficeApi')) as ICredentialDataDecryptedObject;
-	const apiSecret = credentials.apiSecret as string;
-	const apiToken = credentials.apiToken as string;
-
 	const resource = 'fields';
 	const operation = 'get';
 
@@ -203,11 +201,9 @@ export async function getModuleDescription(
 		modules: [module],
 		labels: true,
 	};
+
 	const result = await onOfficeApiAction<OnOfficeFieldConfiguration<true>>(
-		this.getNode(),
-		request,
-		apiSecret,
-		apiToken,
+		that,
 		operation,
 		resource,
 		parameters,
