@@ -3321,7 +3321,7 @@ export class Hubspot implements INodeType {
 					}
 				} catch (error) {
 					if (this.continueOnFail()) {
-						if (resource === 'customObject' || resource === 'association') {
+						if (resource === 'customObject' || resource === 'association' || resource === 'property' || resource === 'propertyGroup') {
 							const errorDetails: Record<string, unknown> = {
 								httpCode: (error as JsonObject).httpCode,
 								timestamp: (error as JsonObject).timestamp,
