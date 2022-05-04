@@ -149,7 +149,6 @@ export const addressFields: INodeProperties[] = [
 					},
 				],
 				default: 1,
-				description: 'The status.',
 			},
 			{
 				displayName: 'Check duplicate',

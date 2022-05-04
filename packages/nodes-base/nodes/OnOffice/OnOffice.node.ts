@@ -121,7 +121,6 @@ export class OnOffice implements INodeType {
 				const fieldNameOptions = availableFields.map((field) => ({
 					name: `${field.label} (${field.name})`,
 					value: field.name,
-					description: `Field name: ${field.name}`,
 				}));
 				return fieldNameOptions;
 			},
