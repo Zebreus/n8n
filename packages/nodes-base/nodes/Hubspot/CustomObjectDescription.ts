@@ -62,7 +62,7 @@ export const customObjectOperations: INodeProperties[] = [
 	},
 	{
 		displayName: 'Custom Object Type',
-		name: 'customObjectType',
+		name: 'objectType',
 		type: 'options',
 		displayOptions: {
 			show: {
@@ -222,7 +222,7 @@ export const customObjectFields: INodeProperties[] = [
 		name: 'idProperty',
 		type: 'options',
 		typeOptions: {
-			loadOptionsDependsOn: ['customObjectType'],
+			loadOptionsDependsOn: ['objectType'],
 			loadOptionsMethod: 'getCustomObjectIdProperties',
 		},
 		displayOptions: {

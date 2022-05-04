@@ -973,9 +973,9 @@ export class Hubspot implements INodeType {
 				const endpoint = '/crm/v3/schemas';
 				const properties = await hubspotApiRequest.call(this, 'GET', endpoint, {});
 				console.log('param', this.getNodeParameter('resource', 0));
-				for (const customObjectType of properties.results) {
-					const objectLabel = customObjectType.labels.singular;
-					const objectTypeId = customObjectType.objectTypeId;
+				for (const objectType of properties.results) {
+					const objectLabel = objectType.labels.singular;
+					const objectTypeId = objectType.objectTypeId;
 					returnData.push({
 						name: objectLabel,
 						value: objectTypeId,
@@ -986,8 +986,8 @@ export class Hubspot implements INodeType {
 			// Get the properties of a custom object type
 			async getCustomObjectProperties(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				const returnData: INodePropertyOptions[] = [];
-				const customObjectType = this.getNodeParameter('customObjectType', 0) as string;
-				const endpoint = `/crm/v3/schemas/${customObjectType}`;
+				const objectType = this.getNodeParameter('objectType', 0) as string;
+				const endpoint = `/crm/v3/schemas/${objectType}`;
 				const result = await hubspotApiRequest.call(this, 'GET', endpoint, {});
 				const properties = result.properties;
 
@@ -1005,11 +1005,11 @@ export class Hubspot implements INodeType {
 			// Get all properties that can be used as property id
 			async getCustomObjectIdProperties(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 				const returnData: INodePropertyOptions[] = [];
-				const customObjectType = this.getNodeParameter('customObjectType', 0) as string;
-				if (!customObjectType) {
+				const objectType = this.getNodeParameter('objectType', 0) as string;
+				if (!objectType) {
 					return [];
 				}
-				const endpoint = `/crm/v3/schemas/${customObjectType}`;
+				const endpoint = `/crm/v3/schemas/${objectType}`;
 				const result = await hubspotApiRequest.call(this, 'GET', endpoint, {});
 				const properties = result.properties;
 				const idProperties = properties.filter((property: { hasUniqueValue?: boolean }) => property.hasUniqueValue === true);
@@ -1019,7 +1019,7 @@ export class Hubspot implements INodeType {
 					value: '',
 				});
 
-				if (customObjectType === '0-1' || customObjectType === 'contact') {
+				if (objectType === '0-1' || objectType === 'contact') {
 					returnData.push({
 						name: 'Email',
 						value: 'email',
@@ -1101,8 +1101,8 @@ export class Hubspot implements INodeType {
 		const resource = this.getNodeParameter('resource', 0) as string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 
-		const customObjectType = resource === 'customObject' ? this.getNodeParameter('customObjectType', 0) as string : undefined;
-		// const customObjectSchema = customObjectType && await hubspotApiRequest.call(this, 'GET', `/crm/v3/schemas/${customObjectType}`, {});
+		const objectType = resource === 'customObject' ? this.getNodeParameter('objectType', 0) as string : undefined;
+		// const customObjectSchema = objectType && await hubspotApiRequest.call(this, 'GET', `/crm/v3/schemas/${objectType}`, {});
 
 		if (resource === 'customObject' && operation.includes('batch')) {
 			if (!this.continueOnFail()) {
@@ -1111,7 +1111,7 @@ export class Hubspot implements INodeType {
 
 			// The maximum batch size is 10 for contacts and 100 for everything else.
 			// https://developers.hubspot.com/docs/api/crm/understanding-the-crm
-			const maxBatchSize = customObjectType === '0-1' || customObjectType === 'contact' ? 10 : 100;
+			const maxBatchSize = objectType === '0-1' || objectType === 'contact' ? 10 : 100;
 
 			const batches = Math.ceil(length / maxBatchSize);
 			const resultsPromises = [...new Array(batches)].map(async (_, batchNumber) => {
@@ -1130,7 +1130,7 @@ export class Hubspot implements INodeType {
 							idProperty: idProperty || undefined,
 							inputs: ([...new Array(batchSize)]).map((_, index) => ({ id: this.getNodeParameter('objectId', index + batchStart) as string })),
 						};
-						const endpoint = `/crm/v3/objects/${customObjectType}/batch/read`;
+						const endpoint = `/crm/v3/objects/${objectType}/batch/read`;
 						const response = await hubspotApiRequest.call(this, 'POST', endpoint, requestBody);
 
 						const results = response.results;
@@ -1150,7 +1150,7 @@ export class Hubspot implements INodeType {
 								idProperty,
 								inputs: ([...new Array(batchSize)]).map((_, index) => ({ id: this.getNodeParameter('objectId', index + batchStart) as string })),
 							};
-							const endpoint = `/crm/v3/objects/${customObjectType}/batch/read`;
+							const endpoint = `/crm/v3/objects/${objectType}/batch/read`;
 							const response = await hubspotApiRequest.call(this, 'POST', endpoint, requestBody);
 							response.results.forEach((result: { id: string, properties: Record<string, string> }) => {
 								idMap[result.properties[idProperty]] = result.id;
@@ -1171,7 +1171,7 @@ export class Hubspot implements INodeType {
 								id,
 							})),
 						};
-						const endpoint = `/crm/v3/objects/${customObjectType}/batch/archive`;
+						const endpoint = `/crm/v3/objects/${objectType}/batch/archive`;
 						const response = await hubspotApiRequest.call(this, 'POST', endpoint, requestBody);
 						errors.push(...(response ? getErrorsFromBatchResponse(response) : []));
 
@@ -1189,7 +1189,7 @@ export class Hubspot implements INodeType {
 							idProperty: idProperty || undefined,
 							inputs: ([...new Array(batchSize)]).map((_, index) => ({ id: this.getNodeParameter('objectId', index + batchStart) as string })),
 						};
-						const readEndpoint = `/crm/v3/objects/${customObjectType}/batch/read`;
+						const readEndpoint = `/crm/v3/objects/${objectType}/batch/read`;
 						const readResponse = await hubspotApiRequest.call(this, 'POST', readEndpoint, readRequestBody);
 						readResponse.results.forEach((result: { id: string, properties: Record<string, string> }) => {
 							idMap[idProperty ? result.properties[idProperty] : result.id] = result.id;
@@ -1234,8 +1234,8 @@ export class Hubspot implements INodeType {
 								.map(element => ({ properties: element.properties })),
 						};
 
-						const createEndpoint = `/crm/v3/objects/${customObjectType}/batch/create`;
-						const updateEndpoint = `/crm/v3/objects/${customObjectType}/batch/update`;
+						const createEndpoint = `/crm/v3/objects/${objectType}/batch/create`;
+						const updateEndpoint = `/crm/v3/objects/${objectType}/batch/update`;
 
 						const createResponse = createBody.inputs.length > 0
 							? await hubspotApiRequest.call(this, 'POST', createEndpoint, createBody)
@@ -1311,7 +1311,7 @@ export class Hubspot implements INodeType {
 		// 			idProperty,
 		// 			inputs: ([...new Array(length)]).map((_, index) => ({ id: this.getNodeParameter('objectId', index) as string })),
 		// 		};
-		// 		const endpoint = `/crm/v3/objects/${customObjectType}/batch/read`;
+		// 		const endpoint = `/crm/v3/objects/${objectType}/batch/read`;
 		// 		console.log("request", requestBody);
 		// 		responseData = await hubspotApiRequest.call(this, 'POST', endpoint, requestBody);
 		// 		console.log("Response", responseData);
@@ -1340,7 +1340,7 @@ export class Hubspot implements INodeType {
 
 
 
-		// 	// const endpoint = `/crm/v3/objects/${customObjectType}/${objectId}`;
+		// 	// const endpoint = `/crm/v3/objects/${objectType}/${objectId}`;
 		// 	// responseData = await hubspotApiRequest.call(this, 'PATCH', endpoint, { properties }, idProperty ? { idProperty } : {});
 		// }
 		//https://legacydocs.hubspot.com/docs/methods/lists/contact-lists-overview
@@ -2368,7 +2368,7 @@ export class Hubspot implements INodeType {
 								}
 							}
 
-							const endpoint = `/crm/v3/objects/${customObjectType}`;
+							const endpoint = `/crm/v3/objects/${objectType}`;
 
 							responseData = await hubspotApiRequest.call(this, 'POST', endpoint, { properties });
 						}
@@ -2390,7 +2390,7 @@ export class Hubspot implements INodeType {
 
 
 
-							const endpoint = `/crm/v3/objects/${customObjectType}/${objectId}`;
+							const endpoint = `/crm/v3/objects/${objectType}/${objectId}`;
 							responseData = await hubspotApiRequest.call(this, 'PATCH', endpoint, { properties }, idProperty ? { idProperty } : {});
 						}
 						if (operation === 'upsert') {
@@ -2417,7 +2417,7 @@ export class Hubspot implements INodeType {
 							}
 
 							try {
-								const endpoint = `/crm/v3/objects/${customObjectType}/${objectId}`;
+								const endpoint = `/crm/v3/objects/${objectType}/${objectId}`;
 								responseData = await hubspotApiRequest.call(this, 'PATCH', endpoint, { properties }, idProperty ? { idProperty } : {});
 							} catch (error) {
 								if ((error as NodeApiError).httpCode !== '404') {
@@ -2426,7 +2426,7 @@ export class Hubspot implements INodeType {
 								if (!idProperty) {
 									throw new NodeOperationError(this.getNode(), 'A custom id property needs to be used when creating a new object');
 								}
-								const endpoint = `/crm/v3/objects/${customObjectType}`;
+								const endpoint = `/crm/v3/objects/${objectType}`;
 								responseData = await hubspotApiRequest.call(this, 'POST', endpoint, { properties });
 							}
 						}
@@ -2452,7 +2452,7 @@ export class Hubspot implements INodeType {
 							if (idProperty) {
 								qs.idProperty = idProperty;
 							}
-							const endpoint = `/crm/v3/objects/${customObjectType}/${objectId}`;
+							const endpoint = `/crm/v3/objects/${objectType}/${objectId}`;
 							responseData = await hubspotApiRequest.call(this, 'GET', endpoint, {}, qs);
 						}
 						if (operation === 'search') {
@@ -2481,7 +2481,7 @@ export class Hubspot implements INodeType {
 								...(additionalFields.sortBy ? { sorts: [additionalFields.sortBy] } : {}),
 							};
 
-							const endpoint = `/crm/v3/objects/${customObjectType}/search`;
+							const endpoint = `/crm/v3/objects/${objectType}/search`;
 
 							if (returnAll) {
 								responseData = await hubspotApiRequestAllItems.call(this, 'results', 'POST', endpoint, body);
@@ -2503,12 +2503,12 @@ export class Hubspot implements INodeType {
 									idProperty,
 									properties: [idProperty],
 								};
-								const getEndpoint = `/crm/v3/objects/${customObjectType}/${objectId}`;
+								const getEndpoint = `/crm/v3/objects/${objectType}/${objectId}`;
 								const idResponseData = await hubspotApiRequest.call(this, 'GET', getEndpoint, {}, qs);
 								realObjectId = idResponseData.id;
 							}
 
-							const endpoint = `/crm/v3/objects/${customObjectType}/${realObjectId}`;
+							const endpoint = `/crm/v3/objects/${objectType}/${realObjectId}`;
 							responseData = await hubspotApiRequest.call(this, 'DELETE', endpoint);
 						}
 					}
