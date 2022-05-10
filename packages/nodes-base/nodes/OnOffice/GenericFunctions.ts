@@ -138,7 +138,7 @@ export function createActionRequest(
 		apiSecret +
 		md5(
 			`${unicodeEscape(
-				JSON.stringify(sortedParameters).replace('/', '\\/'),
+				JSON.stringify(sortedParameters).replace(/\//gm, '\\/'),
 			)},${apiToken},${actionid},${identifier},${resourceid},${apiSecret},${timestamp},${resourceType}`,
 		),
 	);
